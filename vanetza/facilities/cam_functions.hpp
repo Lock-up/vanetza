@@ -93,6 +93,15 @@ bool check_service_specific_permissions(const asn1::Cam& cam, security::CamPermi
  */
 void print_indented(std::ostream& os, const asn1::Cam& cam, const std::string& indent = "\t", unsigned start = 0);
 
+
+/**
+ * Format CAM content to JSON
+ * \param os output stream
+ * \param cam CA message
+ * \return CAM in JSON format 
+ */
+std::string format_json(const asn1::Cam& cam);
+
 } // namespace facilities
 } // namespace vanetza
 

@@ -363,10 +363,151 @@ void print_indented(std::ostream& os, const asn1::Cam& message, const std::strin
         prefix("High Frequency Container") << cam.camParameters.highFrequencyContainer.present << "\n";
     }
 
-    prefix("Low Frequency Container") << (cam.camParameters.lowFrequencyContainer ? "yes" : "no") << "\n";
-    // TODO: print basic vehicle low frequency container in detail
+    // prefix("Low Frequency Container") << (cam.camParameters.lowFrequencyContainer ? "yes" : "no") << "\n";
+    if (cam.camParameters.lowFrequencyContainer) {
+        if(cam.camParameters.lowFrequencyContainer->present == LowFrequencyContainer_PR_basicVehicleContainerLowFrequency) {
+            prefix("Low Frequency Container [Basic Vehicle]") << "\n";
+            ++level;
+            const BasicVehicleContainerLowFrequency& bvc =
+                cam.camParameters.lowFrequencyContainer->choice.basicVehicleContainerLowFrequency;
+            prefix("Vehicle Role") << bvc.vehicleRole << "\n";
+
+            // TODO: decode exteriorLights
+            prefix("Exterior Lights") << bvc.exteriorLights.buf << "\n";
+
+            
+            prefix("Path History Points") << bvc.pathHistory.list.count << "\n";
+            if(bvc.pathHistory.list.count > 0) {
+                ++level;
+                for(int i=0; i< bvc.pathHistory.list.count;i++) {
+                    prefix("Point") << i << "\n";
+                    ++level;
+                    prefix("PathDeltaTime") << *bvc.pathHistory.list.array[i]->pathDeltaTime << "\n";
+                    prefix("DeltaLatitude") << bvc.pathHistory.list.array[i]->pathPosition.deltaLatitude << "\n";
+                    prefix("DeltaLongitude") << bvc.pathHistory.list.array[i]->pathPosition.deltaLongitude << "\n";
+                    prefix("DeltaAltitude") << bvc.pathHistory.list.array[i]->pathPosition.deltaAltitude << "\n";                    
+                    --level;
+                }
+                --level;
+            }
+            
+        } else {
+            prefix("Low Frequency Container") << cam.camParameters.highFrequencyContainer.present << "\n";
+        }
+    }
+
+
     // TODO: print special vehicle container
     --level;
+}
+
+std::string format_json(const asn1::Cam& message)
+{
+    std::stringstream result;
+
+    result << "{\"ITS PDU Header\":{";
+
+    const ItsPduHeader_t& header = message->header;
+    result << "\"Protocol Version\":" << header.protocolVersion << ",";
+    result << "\"Message ID\":" << header.messageID << ",";
+    result << "\"Station ID\":" << header.stationID;
+    result << "},";
+
+    result << "\"CoopAwarensess\":" << "{";
+    const CoopAwareness_t& cam = message->cam;
+    result << "\"Generation Delta Time\":" << cam.generationDeltaTime << ",";
+
+    result << "\"Basic Container\":" << "{";
+    const BasicContainer_t& basic = cam.camParameters.basicContainer;
+    result << "\"Station Type\":" << basic.stationType << ",";
+    result << "\"Reference Presultition\":" << "{";
+    result << "\"Longitude\":" << basic.referencePosition.longitude << ",";
+    result << "\"Latitude\":" << basic.referencePosition.latitude << ",";
+    result << "\"Semi Major Orientation\":" << basic.referencePosition.positionConfidenceEllipse.semiMajorOrientation << ",";
+    result << "\"Semi Major Confidence\":" << basic.referencePosition.positionConfidenceEllipse.semiMajorConfidence << ",";
+    result << "\"Semi Minor Confidence\":" << basic.referencePosition.positionConfidenceEllipse.semiMinorConfidence << ",";
+    result << "\"Altitude\":" << "{";
+    result << "\"Value\":" << basic.referencePosition.altitude.altitudeValue << ",";
+    result << "\"Confidence\":" << basic.referencePosition.altitude.altitudeConfidence << "}";
+    result << "}";
+    result << "}";
+    result << "}";
+
+    if (cam.camParameters.highFrequencyContainer.present == HighFrequencyContainer_PR_basicVehicleContainerHighFrequency) {
+        result << ",\"High Frequency Container\":" << "{";
+       
+        const BasicVehicleContainerHighFrequency& bvc =
+            cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency;
+
+        result << "\"Heading\":" << "{";
+        result << "\"Value\":" << bvc.heading.headingValue << ",";
+        result << "\"Confidence\":" << bvc.heading.headingConfidence << "},";
+
+        result << "\"Speed\":" << "{";
+        result << "\"Value\":" << bvc.speed.speedValue << ",";
+        result << "\"Confidence\":" << bvc.speed.speedConfidence << "},";
+
+        result << "\"Drive Direction\":" << bvc.driveDirection << ",";
+        result << "\"Longitudinal Acceleration\":" << bvc.longitudinalAcceleration.longitudinalAccelerationValue << ",";
+
+        result << "\"Vehicle Length\":" << "{";
+        result << "\"Value\":" << bvc.vehicleLength.vehicleLengthValue << ",";
+        result << "\"Confidence Indication\":" << bvc.vehicleLength.vehicleLengthConfidenceIndication << "},";
+        result << "\"Vehicle Width\":" << bvc.vehicleWidth << ",";
+
+        result << "\"Curvature\":" << "{";
+        result << "\"Value\":" << bvc.curvature.curvatureValue << ",";
+        result << "\"Confidence\":" << bvc.curvature.curvatureConfidence << "},";
+
+        result << "\"Curvature Calculation Mode\":" << bvc.curvatureCalculationMode << ",";
+
+        result << "\"Yaw Rate\":" << "{";
+        result << "\"Value\":" << bvc.yawRate.yawRateValue << ",";
+        result << "\"Confidence\":" << bvc.yawRate.yawRateConfidence << "}";
+
+
+        result << "}";
+    }
+
+    // prefix("Low Frequency Container") << (cam.camParameters.lowFrequencyContainer ? "yes" : "no") << "\n";
+    // if (cam.camParameters.lowFrequencyContainer) {
+    //     if(cam.camParameters.lowFrequencyContainer->present == LowFrequencyContainer_PR_basicVehicleContainerLowFrequency) {
+    //         prefix("Low Frequency Container [Basic Vehicle]") << "\n";
+    //         ++level;
+    //         const BasicVehicleContainerLowFrequency& bvc =
+    //             cam.camParameters.lowFrequencyContainer->choice.basicVehicleContainerLowFrequency;
+    //         prefix("Vehicle Role") << bvc.vehicleRole << "\n";
+
+    //         // TODO: decode exteriorLights
+    //         prefix("Exterior Lights") << bvc.exteriorLights.buf << "\n";
+
+            
+    //         prefix("Path History Points") << bvc.pathHistory.list.count << "\n";
+    //         if(bvc.pathHistory.list.count > 0) {
+    //             ++level;
+    //             for(int i=0; i< bvc.pathHistory.list.count;i++) {
+    //                 prefix("Point") << i << "\n";
+    //                 ++level;
+    //                 prefix("PathDeltaTime") << *bvc.pathHistory.list.array[i]->pathDeltaTime << "\n";
+    //                 prefix("DeltaLatitude") << bvc.pathHistory.list.array[i]->pathPosition.deltaLatitude << "\n";
+    //                 prefix("DeltaLongitude") << bvc.pathHistory.list.array[i]->pathPosition.deltaLongitude << "\n";
+    //                 prefix("DeltaAltitude") << bvc.pathHistory.list.array[i]->pathPosition.deltaAltitude << "\n";                    
+    //                 --level;
+    //             }
+    //             --level;
+    //         }
+            
+    //     } else {
+    //         prefix("Low Frequency Container") << cam.camParameters.highFrequencyContainer.present << "\n";
+    //     }
+    // }
+
+
+    // TODO: print special vehicle container
+    
+    result << "}";
+
+    return result.str();
 }
 
 } // namespace facilities
