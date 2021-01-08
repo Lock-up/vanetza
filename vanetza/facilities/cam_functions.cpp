@@ -319,7 +319,7 @@ void print_indented(std::ostream& os, const asn1::Cam& message, const std::strin
     --level;
 
     const CoopAwareness_t& cam = message->cam;
-    prefix("CoopAwarensess") << "\n";
+    prefix("CoopAwareness") << "\n";
     ++level;
     prefix("Generation Delta Time") << cam.generationDeltaTime << "\n";
 
@@ -413,7 +413,7 @@ std::string format_json(const asn1::Cam& message)
     result << "\"Station ID\":" << header.stationID;
     result << "},";
 
-    result << "\"CoopAwarensess\":" << "{";
+    result << "\"CoopAwareness\":" << "{";
     const CoopAwareness_t& cam = message->cam;
     result << "\"Generation Delta Time\":" << cam.generationDeltaTime << ",";
 
