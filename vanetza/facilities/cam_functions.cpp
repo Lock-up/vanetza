@@ -455,6 +455,8 @@ std::string format_json(const asn1::Cam& message)
         result << "\"Confidence Indication\":" << bvc.vehicleLength.vehicleLengthConfidenceIndication << "},";
         result << "\"Vehicle Width\":" << bvc.vehicleWidth << ",";
 
+        result << "\"LanePosition\":" << *(bvc.lanePosition) << ",";
+
         result << "\"Curvature\":" << "{";
         result << "\"Value\":" << bvc.curvature.curvatureValue << ",";
         result << "\"Confidence\":" << bvc.curvature.curvatureConfidence << "},";
